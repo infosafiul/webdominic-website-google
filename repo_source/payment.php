@@ -1,0 +1,10 @@
+<?php
+require_once __DIR__.'/includes/bootstrap.php';
+require_login();
+$number=trim($_GET['order']??''); $u=current_user(); $order=null; $payment=null; $error='';
+if($db && $number){
+  $st=$db->prepare('SELECT * FROM orders WHERE order_number=? AND user_id=? LIMIT 1'); $st->execute([$number,$u['id']]); $order=$st->fetch();
+  if($order){$st=$db->prepare('SELECT * FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1');$st->execute([$order['id']]);$payment=$st->fetch();}
+}
+if(!$order){http_response_code(404);$error='Payment order not found.';}
+?><!doctype html><html lang="<?=e($LANG)?>"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment — WDH</title><link rel="stylesheet" href="assets/css/style.css?v=wdh-ui-v8"><link rel="stylesheet" href="assets/css/catalog.css?v=wdh-ui-v8"></head><body><?php require __DIR__.'/includes/header.php';?><main class="simple-page"><div class="breadcrumbs">Home › Payment</div><?php if($error):?><div class="alert error"><?=e($error)?></div><a class="btn secondary" href="client.php">Back to Portal</a><?php else:?><div class="portal-welcome"><div><span class="eyebrow mint">PAYMENT</span><h1><?=e($order['order_number'])?></h1><p>Payment status: <strong><?=e(ucfirst($payment['status']??$order['status']))?></strong></p></div><a class="btn secondary" href="order-details.php?order=<?=urlencode($order['order_number'])?>">View Order</a></div><section class="cart-card"><h2>Payment Summary</h2><div class="total">Amount <strong><?=money($order['total'],$order['currency'])?></strong></div><p class="muted">If you submitted a manual payment, keep your transaction reference available until an administrator verifies it.</p><?php if(($payment['status']??'')==='pending'):?><div class="alert success-alert">Your payment submission is pending verification.</div><?php elseif(($payment['status']??'')==='approved'):?><div class="alert success-alert">Payment approved. Your order is now marked paid.</div><?php endif;?></section><?php endif;?></main><?php require __DIR__.'/includes/footer.php';?></body></html>

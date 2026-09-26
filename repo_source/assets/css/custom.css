@@ -1,0 +1,110 @@
+/* ==========================================================================
+   CUSTOM OVERRIDES
+   ==========================================================================
+   Like a "custom.css" in WordPress: this file loads LAST, after style.css
+   and mega-nav.css, so anything written here wins over them for
+   same-specificity rules — safe to experiment in without editing the main
+   files.
+
+   IMPORTANT: much of the site's existing CSS (style.css, mega-nav.css) uses
+   `!important` on many rules (a pattern already used throughout the site
+   before this file existed). Loading last is not always enough to beat an
+   `!important` rule — if a change you make here doesn't seem to apply,
+   add `!important` to your own line too, e.g.:
+
+     .mega-trigger { font-size: 15px !important; }
+
+   Nothing needs to go here for the site to work — it can stay empty.
+   Add rules below as you want to test them; remove or comment out
+   (/* ... *​/) anything you decide not to keep.
+   ========================================================================== */
+
+
+
+/* ==========================================================================
+   WDH CUSTOM NAVIGATION FONT OVERRIDE
+   Only .mega-trigger font-size and font-weight are changed.
+   mega-nav.css remains untouched.
+   ========================================================================== */
+
+
+/* =========================
+   BANGLA
+   ========================= */
+
+/* 901px - 1000px */
+@media (min-width: 901px) and (max-width: 1000px) {
+    html[lang="bn"] .mega-trigger {
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+
+/* 1001px - 1080px */
+@media (min-width: 1001px) and (max-width: 1080px) {
+    html[lang="bn"] .mega-trigger {
+        font-size: 15px;
+        font-weight: 600;
+    }
+}
+
+/* 1081px - 1269px */
+@media (min-width: 1081px) and (max-width: 1269px) {
+    html[lang="bn"] .mega-trigger {
+        font-size: 16px;
+        font-weight: 600;
+    }
+}
+
+/* 1270px - 1399px */
+@media (min-width: 1270px) and (max-width: 1399px) {
+    html[lang="bn"] .mega-trigger {
+        font-size: 17px;
+        font-weight: 600;
+    }
+}
+
+
+/* =========================
+   ENGLISH
+   ========================= */
+
+/* 901px - 1000px */
+@media (min-width: 901px) and (max-width: 1000px) {
+    html[lang="en"] .mega-trigger {
+        font-size: 12px;
+        font-weight: 600;
+    }
+}
+
+/* 1001px - 1080px */
+@media (min-width: 1001px) and (max-width: 1080px) {
+    html[lang="en"] .mega-trigger {
+        font-size: 14px;
+        font-weight: 550;
+    }
+}
+
+/* 1081px - 1170px */
+@media (min-width: 1081px) and (max-width: 1170px) {
+    html[lang="en"] .mega-trigger {
+        font-size: 15px;
+        font-weight: 550;
+    }
+}
+
+/* 1171px - 1399px */
+@media (min-width: 1171px) and (max-width: 1399px) {
+    html[lang="en"] .mega-trigger {
+        font-size: 16px;
+        font-weight: 550;
+    }
+}
+
+/* 1400px - 1920px */
+@media (min-width: 1400px) and (max-width: 1920px) {
+    html[lang="en"] .mega-trigger {
+        font-size: 16px;
+        font-weight: 500;
+    }
+}

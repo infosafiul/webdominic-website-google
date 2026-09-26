@@ -1,0 +1,184 @@
+<?php
+require_once __DIR__.'/includes/bootstrap.php';
+
+$raw = $_GET['domain'] ?? $_POST['domain'] ?? 'yourbusiness';
+$domain = domain_query_normalize($raw);
+$parts = explode('.', $domain, 2);
+$sld = preg_replace('/[^a-z0-9-]/i', '', $parts[0] ?? '');
+if ($sld === '') $sld = 'yourbusiness';
+$selectedExt = strtolower(trim((string)($_GET['extension'] ?? '')));
+$selectedExt = $selectedExt !== '' ? '.'.ltrim($selectedExt,'.') : '';
+
+$allPrices = fetch_domain_prices($db);
+$prices = $selectedExt ? array_values(array_filter($allPrices, fn($p)=>strtolower($p['tld']) === $selectedExt)) : $allPrices;
+$allTlds = array_map(fn($p)=>ltrim($p['tld'],'.'), $prices);
+$availability = registrar_check_availability_batch($sld, $allTlds);
+
+$results=[];
+foreach($prices as $p){
+    $key=$sld.strtolower($p['tld']);
+    $r=$availability[$key] ?? ['success'=>false,'available'=>null,'status'=>'unknown','domain'=>$key];
+    $results[]=[
+        'name'=>$key,
+        'tld'=>$p['tld'],
+        'available'=>$r['available'] ?? null,
+        'status'=>$r['status'] ?? 'unknown',
+        'price'=>$p['registration_price'],
+        'currency'=>$p['currency'] ?? 'BDT',
+        'desc'=>$p['description'],
+        'premium'=>$r['premium'] ?? false,
+        'configured'=>$r['configured'] ?? false,
+        'error'=>$r['error'] ?? null,
+    ];
+}
+
+$lookupFailures = count(array_filter($results, fn($r)=>in_array($r['status'],['api_error','not_configured','unknown'],true)));
+$registeredCount = count(array_filter($results, fn($r)=>$r['available'] === false));
+$availableCount = count(array_filter($results, fn($r)=>$r['available'] === true));
+$cartItems = cart_items();
+
+function domain_status_text(array $r): string {
+    return match ($r['status'] ?? '') {
+        'regthroughus','regthroughothers' => 'Registered',
+        'unknown','api_error','not_configured' => 'Check Again',
+        default => 'Unavailable',
+    };
+}
+
+?><!doctype html>
+<html lang="<?=e($LANG)?>" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domain Search Results — WDH</title>
+<link rel="stylesheet" href="assets/css/style.css?v=wdh-ui-v8">
+<link rel="stylesheet" href="assets/css/catalog.css?v=wdh-step2-domain-1">
+</head>
+<body>
+<?php require __DIR__.'/includes/header.php'; ?>
+<main class="catalog-page">
+  <section class="catalog-hero">
+    <div>
+      <div class="breadcrumbs">Home › Domains › Search Results</div>
+      <h1>Search Results for <span><?=e($sld)?></span></h1>
+      <p>Choose your perfect domain name from the list below.</p>
+    </div>
+    <div class="catalog-hero-art" aria-hidden="true">www.<strong>⌕</strong></div>
+  </section>
+
+  <form class="search-row" method="get" action="domains.php">
+    <input name="domain" value="<?=e($sld)?>" placeholder="yourbusiness" required pattern="[A-Za-z0-9-]{1,63}" autocomplete="off">
+    <select name="extension" aria-label="Domain extension">
+      <option value="">All Extensions</option>
+      <?php foreach($allPrices as $p): ?><option value="<?=e($p['tld'])?>" <?=$selectedExt===$p['tld']?'selected':''?>><?=e($p['tld'])?></option><?php endforeach; ?>
+    </select>
+    <button class="btn primary" type="submit">Search Again</button>
+  </form>
+
+  <?php if($lookupFailures): ?>
+    <div class="alert domain-lookup-alert">
+      <strong>Some domain availability checks could not be completed.</strong>
+      <span>These are not marked as unavailable. Please use “Check Again” to retry.</span>
+    </div>
+  <?php endif; ?>
+
+  <div class="domain-tabs" role="tablist" aria-label="Domain result filters">
+    <button type="button" class="domain-tab active" data-tab="all">All Extensions <b><?=count($results)?></b></button>
+    <button type="button" class="domain-tab" data-tab="popular">Popular</button>
+    <button type="button" class="domain-tab" data-tab="business">Business</button>
+    <button type="button" class="domain-tab" data-tab="new">New</button>
+    <button type="button" class="domain-tab" data-tab="country">Country Code</button>
+    <button type="button" class="domain-filter-toggle" id="filterToggle">☰ Filter</button>
+  </div>
+
+  <div class="catalog-layout">
+    <aside class="filter-card" id="domainFilters">
+      <h3>Filter Results</h3>
+      <h4>By Extension</h4>
+      <label><input type="radio" name="filter" value="all" checked> All Extensions <em><?=count($results)?></em></label>
+      <label><input type="radio" name="filter" value="popular"> Popular</label>
+      <label><input type="radio" name="filter" value="business"> Business</label>
+      <label><input type="radio" name="filter" value="country"> Country Code</label>
+      <label><input type="radio" name="filter" value="new"> New</label>
+      <h4>By Price</h4>
+      <label><input type="radio" name="price" value="all" checked> All Prices</label>
+      <label><input type="radio" name="price" value="under1000"> Under ৳1,000</label>
+      <label><input type="radio" name="price" value="1000-2000"> ৳1,000 – ৳2,000</label>
+      <label><input type="radio" name="price" value="2000-5000"> ৳2,000 – ৳5,000</label>
+      <label><input type="radio" name="price" value="over5000"> Above ৳5,000</label>
+      <h4>Other Filters</h4>
+      <label><input type="checkbox" id="availableOnly"> Show Available Only</label>
+      <label><input type="checkbox" id="premiumOnly"> Show Premium Domains</label>
+      <button type="button" class="clear-btn" id="clearDomainFilters">Clear All ↻</button>
+    </aside>
+
+    <section class="results-card" aria-label="Domain results">
+      <div class="results-heading"><span>DOMAIN NAME</span><span>PRICE / YEAR</span><span>ACTION</span></div>
+      <?php foreach($results as $index=>$r):
+        $popular = in_array(ltrim(strtolower($r['tld']),'.'), ['com','net','org'], true);
+        $business = in_array(ltrim(strtolower($r['tld']),'.'), ['com','biz','co','shop'], true);
+        $country = strlen(ltrim($r['tld'],'.')) === 2;
+        $new = in_array(ltrim(strtolower($r['tld']),'.'), ['xyz','shop','online','site','store'], true);
+        $status = $r['status'];
+      ?>
+      <article class="domain-result" data-tld="<?=e(ltrim($r['tld'],'.'))?>" data-price="<?=e($r['price'])?>" data-available="<?= $r['available']===true?'1':($r['available']===false?'0':'unknown') ?>" data-premium="<?=$r['premium']?'1':'0'?>" data-popular="<?=$popular?'1':'0'?>" data-business="<?=$business?'1':'0'?>" data-country="<?=$country?'1':'0'?>" data-new="<?=$new?'1':'0'?>">
+        <div class="tld-badge"><?=e(ltrim($r['tld'],'.'))?></div>
+        <div class="domain-info"><strong><?=e($r['name'])?></strong><small><?=e($r['desc'])?></small><?php if($r['premium']): ?><span class="premium-badge">PREMIUM</span><?php endif; ?></div>
+        <div class="domain-price"><?=money($r['price'],$r['currency'])?> <small>/year</small></div>
+        <div class="domain-action">
+          <?php if($r['available']===true): ?>
+            <form method="post" action="cart.php"><?=csrf_field()?><input type="hidden" name="action" value="add"><input type="hidden" name="type" value="domain"><input type="hidden" name="name" value="<?=e($r['name'])?>"><input type="hidden" name="domain_name" value="<?=e($r['name'])?>"><input type="hidden" name="price" value="<?=e($r['price'])?>"><input type="hidden" name="product_id" value=""><input type="hidden" name="currency" value="<?=e($r['currency'])?>"><input type="hidden" name="billing_cycle" value="yearly"><button class="btn primary small" type="submit">🛒 Add to Cart</button></form>
+          <?php elseif(in_array($status,['regthroughus','regthroughothers'],true)): ?>
+            <span class="taken">Registered</span>
+          <?php else: ?>
+            <button class="taken retry-domain" type="button" data-domain="<?=e($r['name'])?>">Check Again</button>
+          <?php endif; ?>
+        </div>
+      </article>
+      <?php endforeach; ?>
+      <div class="no-results" id="noDomainResults" hidden>No domains match the selected filters.</div>
+    </section>
+
+    <aside class="side-card domain-cart-card">
+      <div class="side-card-title"><h3>Your Cart (<?=count($cartItems)?>)</h3><a href="cart.php">View Cart</a></div>
+      <?php if(!$cartItems): ?>
+        <p class="cart-empty-note">Your selected domains and services will appear here.</p>
+      <?php else: foreach($cartItems as $item): ?>
+        <div class="mini-cart-row"><span class="mini-tld"><?=e(ltrim(strstr(($item['name']??''), '.') ?: '.com','.'))?></span><div><strong><?=e($item['name'])?></strong><small>1 Year Registration</small></div><b><?=money($item['price'],$item['currency'])?></b></div>
+      <?php endforeach; endif; ?>
+      <div class="mini-summary"><span>Subtotal</span><strong><?=money(cart_total(),$cartItems[0]['currency']??'BDT')?></strong></div>
+      <div class="mini-summary"><span>VAT/Tax (0%)</span><strong>৳0</strong></div>
+      <div class="mini-total"><span>Total</span><strong><?=money(cart_total(),$cartItems[0]['currency']??'BDT')?></strong></div>
+      <?php if($cartItems): ?><a class="btn primary" href="checkout.php">Proceed to Checkout →</a><a class="continue-link" href="index.php">Continue Shopping</a><?php endif; ?>
+      <hr>
+      <h3>Why Choose WDH?</h3>
+      <ul><li>No Hidden Fees</li><li>Free WHOIS Privacy*</li><li>Easy Domain Management</li><li>Instant Registration</li><li>24/7 Expert Support</li></ul>
+    </aside>
+  </div>
+</main>
+<?php require __DIR__.'/includes/footer.php'; ?>
+<script src="assets/js/app.js?v=wdh-ui-v8"></script>
+<script>
+(function(){
+  const rows=[...document.querySelectorAll('.domain-result')], tabs=[...document.querySelectorAll('.domain-tab')];
+  const available=document.getElementById('availableOnly'), premium=document.getElementById('premiumOnly'), no=document.getElementById('noDomainResults');
+  let tab='all';
+  function filter(){
+    const price=(document.querySelector('input[name="price"]:checked')||{}).value||'all'; let shown=0;
+    rows.forEach(r=>{
+      const p=parseFloat(r.dataset.price||'0'), a=r.dataset.available, key=tab;
+      const tabOk=key==='all'||r.dataset[key]==='1';
+      const availOk=!available.checked||a==='1', premOk=!premium.checked||r.dataset.premium==='1';
+      const priceOk=price==='all'||(price==='under1000'&&p<1000)||(price==='1000-2000'&&p>=1000&&p<=2000)||(price==='2000-5000'&&p>2000&&p<=5000)||(price==='over5000'&&p>5000);
+      const ok=tabOk&&availOk&&premOk&&priceOk; r.hidden=!ok; if(ok) shown++;
+    }); no.hidden=shown!==0;
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');tab=t.dataset.tab; const radio=document.querySelector('input[name="filter"][value="'+tab+'"]'); if(radio) radio.checked=true; filter();}));
+  document.querySelectorAll('input[name="filter"]').forEach(r=>r.addEventListener('change',()=>{tab=r.value;tabs.forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));filter();}));
+  document.querySelectorAll('input[name="price"]').forEach(r=>r.addEventListener('change',filter)); available.addEventListener('change',filter); premium.addEventListener('change',filter);
+  document.getElementById('clearDomainFilters').addEventListener('click',()=>{document.querySelector('input[name="filter"][value="all"]').checked=true;document.querySelector('input[name="price"][value="all"]').checked=true;available.checked=false;premium.checked=false;tab='all';tabs.forEach(x=>x.classList.toggle('active',x.dataset.tab==='all'));filter();});
+  const ft=document.getElementById('filterToggle'), fc=document.getElementById('domainFilters'); if(ft) ft.addEventListener('click',()=>fc.classList.toggle('filter-open'));
+  document.querySelectorAll('.retry-domain').forEach(btn=>btn.addEventListener('click',()=>{const d=btn.dataset.domain; window.location.href='domains.php?domain='+encodeURIComponent(d); }));
+  filter();
+})();
+</script>
+</body></html>

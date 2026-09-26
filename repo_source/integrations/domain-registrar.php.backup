@@ -1,0 +1,173 @@
+<?php
+/**
+ * WDH Domain Registrar Adapter
+ *
+ * ResellerClub / OrderBox HTTP API integration for domain availability.
+ * Credentials remain server-side only. The customer-facing UI never exposes
+ * registrar configuration or API errors.
+ */
+if (!function_exists('demo_domain_available')) {
+    function demo_domain_available(string $sld, string $tld): bool {
+        $reserved=['google','facebook','amazon','microsoft','apple','openai','wdh','webdatahosting'];
+        return !in_array(strtolower($sld), $reserved, true);
+    }
+}
+
+function registrar_config(): array {
+    global $config;
+    $r = $config['registrar'] ?? [];
+    return [
+        'provider' => strtolower((string)($r['provider'] ?? 'resellerclub')),
+        'reseller_id' => trim((string)($r['reseller_id'] ?? '')),
+        'api_key' => trim((string)($r['api_key'] ?? '')),
+        'server_ip' => trim((string)($r['server_ip'] ?? '')),
+        'environment' => strtolower((string)($r['environment'] ?? 'production')),
+        'timeout' => max(3, min(30, (int)($r['timeout'] ?? 10))),
+        'allow_demo' => !empty($r['allow_demo']),
+    ];
+}
+
+function registrar_is_configured(): bool {
+    $c = registrar_config();
+    return $c['provider'] === 'resellerclub'
+        && $c['reseller_id'] !== ''
+        && $c['api_key'] !== ''
+        && !preg_match('/^YOUR_/i', $c['reseller_id'])
+        && !preg_match('/^YOUR_/i', $c['api_key']);
+}
+
+/** Availability API has its own production/test host. server_ip is used for
+ * ResellerClub whitelist configuration and is intentionally not sent as an API parameter.
+ */
+function registrar_api_base(): string {
+    $c = registrar_config();
+    if ($c['environment'] === 'test' || $c['environment'] === 'sandbox') {
+        return 'https://test.domaincheck.httpapi.com/api';
+    }
+    return 'https://domaincheck.httpapi.com/api';
+}
+
+function registrar_http_get(string $path, array $params): array {
+    $c = registrar_config();
+    $url = rtrim(registrar_api_base(), '/') . '/' . ltrim($path, '/') . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => min(5, $c['timeout']),
+        CURLOPT_TIMEOUT => $c['timeout'],
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        CURLOPT_USERAGENT => 'WDH-Domain-Platform/1.1',
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+    ]);
+    $body = curl_exec($ch);
+    $errno = curl_errno($ch);
+    $error = curl_error($ch);
+    $http = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($body === false || $errno) {
+        return ['success'=>false,'error'=>'Registrar connection failed.','detail'=>$error ?: ('cURL error '.$errno),'http_code'=>$http];
+    }
+    $data = json_decode($body, true);
+    if (!is_array($data)) {
+        return ['success'=>false,'error'=>'Registrar returned an invalid response.','http_code'=>$http];
+    }
+    if ($http < 200 || $http >= 300) {
+        return ['success'=>false,'error'=>'Registrar HTTP error.','http_code'=>$http,'response'=>$data];
+    }
+    return ['success'=>true,'data'=>$data,'http_code'=>$http];
+}
+
+function registrar_normalize_api_node($node): array {
+    if (is_array($node)) {
+        $status = strtolower((string)($node['status'] ?? 'unknown'));
+        return [
+            'status' => $status,
+            'available' => $status === 'available',
+            'premium' => is_array($node['costHash'] ?? null),
+            'registrar_cost' => $node['costHash'] ?? null,
+            'raw' => $node,
+        ];
+    }
+    $status = strtolower((string)$node);
+    return [
+        'status' => $status,
+        'available' => $status === 'available',
+        'premium' => false,
+        'registrar_cost' => null,
+        'raw' => $node,
+    ];
+}
+
+function registrar_check_availability(string $sld, string $tld): array {
+    $sld = strtolower(trim($sld));
+    $tld = ltrim(strtolower(trim($tld)), '.');
+    $domain = $sld . '.' . $tld;
+    $c = registrar_config();
+    if (!registrar_is_configured()) {
+        if ($c['allow_demo']) {
+            return ['success'=>true,'configured'=>false,'available'=>demo_domain_available($sld, '.'.$tld),'status'=>'demo','domain'=>$domain];
+        }
+        return ['success'=>false,'configured'=>false,'available'=>null,'status'=>'not_configured','domain'=>$domain];
+    }
+    $response = registrar_http_get('/domains/available.json', [
+        'auth-userid' => $c['reseller_id'],
+        'api-key' => $c['api_key'],
+        'domain-name' => $sld,
+        'tlds' => $tld,
+    ]);
+    if (!$response['success']) {
+        return ['success'=>false,'configured'=>true,'available'=>null,'status'=>'api_error','domain'=>$domain,'error'=>$response['error']];
+    }
+    $data = $response['data'];
+    $node = $data[$domain] ?? $data[strtolower($domain)] ?? null;
+    $parsed = registrar_normalize_api_node($node);
+    if (in_array($parsed['status'], ['regthroughus','regthroughothers','unknown'], true)) {
+        $parsed['available'] = false;
+    }
+    return array_merge(['success'=>true,'configured'=>true,'domain'=>$domain], $parsed);
+}
+
+function registrar_status_label(array $result): string {
+    return match ($result['status'] ?? '') {
+        'available' => 'Available',
+        'regthroughus','regthroughothers' => 'Registered',
+        'unknown' => 'Unavailable right now',
+        'demo' => 'Available',
+        default => 'Unavailable',
+    };
+}
+
+function registrar_check_availability_batch(string $sld, array $tlds): array {
+    $sld = strtolower(trim($sld));
+    $tlds = array_values(array_unique(array_map(fn($t)=>ltrim(strtolower(trim($t)), '.'), $tlds)));
+    $out = [];
+    $c = registrar_config();
+    if (!registrar_is_configured()) {
+        foreach ($tlds as $tld) {
+            $out[$sld.'.'.$tld] = registrar_check_availability($sld, $tld);
+        }
+        return $out;
+    }
+    $params = ['auth-userid'=>$c['reseller_id'],'api-key'=>$c['api_key'],'domain-name'=>$sld];
+    foreach ($tlds as $tld) $params['tlds'][] = $tld;
+    $response = registrar_http_get('/domains/available.json', $params);
+    if (!$response['success']) {
+        foreach ($tlds as $tld) {
+            $out[$sld.'.'.$tld] = ['success'=>false,'configured'=>true,'available'=>null,'status'=>'api_error','domain'=>$sld.'.'.$tld,'error'=>$response['error']];
+        }
+        return $out;
+    }
+    foreach ($tlds as $tld) {
+        $domain = $sld.'.'.$tld;
+        $node = $response['data'][$domain] ?? $response['data'][strtolower($domain)] ?? null;
+        $parsed = registrar_normalize_api_node($node);
+        if (in_array($parsed['status'], ['regthroughus','regthroughothers','unknown'], true)) {
+            $parsed['available'] = false;
+        }
+        $out[$domain] = array_merge(['success'=>true,'configured'=>true,'domain'=>$domain], $parsed);
+    }
+    return $out;
+}

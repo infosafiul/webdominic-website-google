@@ -1,0 +1,35 @@
+<?php
+require_once __DIR__.'/includes/bootstrap.php'; require_admin(); $notice='';$error='';
+if(is_post()){
+  verify_csrf();
+  try{
+    if(!$db) throw new RuntimeException('Database unavailable.');
+    $id=(int)($_POST['id']??0); $action=$_POST['action']??''; $st=$db->prepare('SELECT * FROM custom_hosting_requests WHERE id=? FOR UPDATE'); $st->execute([$id]); $r=$st->fetch(); if(!$r) throw new RuntimeException('Request not found.');
+    if($action==='quote'){
+      $price=(float)round((float)($_POST['quoted_price']??0),0); if($price<=0) throw new RuntimeException('Quote price must be greater than zero.');
+      $currency=in_array($_POST['quoted_currency']??'BDT',['BDT','USD'],true)?$_POST['quoted_currency']:'BDT';
+      $name=trim((string)($_POST['quoted_product_name']??'Custom Hosting')); if($name==='')$name='Custom Hosting';
+      $cycle=in_array($r['billing_cycle'],['monthly','yearly'],true)?$r['billing_cycle']:'monthly';
+      $db->beginTransaction();
+      $db->prepare("UPDATE custom_hosting_requests SET quoted_price=?,quoted_currency=?,quoted_product_name=?,status='quoted',admin_note=?,quoted_at=NOW() WHERE id=?")->execute([$price,$currency,$name,trim((string)($_POST['admin_note']??'')),$id]);
+      $db->commit(); $notice='Quote saved. Click Create Order to generate the customer invoice/order.';
+    } elseif($action==='create_order'){
+      if($r['converted_order_id']) throw new RuntimeException('An order has already been created for this request.');
+      $price=(float)($r['quoted_price']??0); if($price<=0) throw new RuntimeException('Save a valid quote before creating an order.');
+      $currency=$r['quoted_currency']?:'BDT'; $cycle=$r['billing_cycle']?:'monthly';
+      $db->beginTransaction();
+      $orderNo='WDH-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(3)));
+      $db->prepare("INSERT INTO orders(order_number,user_id,total,currency,status,fulfillment_status,discount_amount) VALUES(?,?,?,?,?,?,0)")->execute([$orderNo,$r['user_id'],$price,$currency,'pending','awaiting_payment']); $orderId=(int)$db->lastInsertId();
+      $desc=$r['quoted_product_name']?:'Custom Hosting';
+      $db->prepare('INSERT INTO order_items(order_id,item_type,product_id,product_category,domain_name,description,unit_price,currency,billing_cycle,quantity) VALUES(?,?,?,?,?,?,?,?,?,1)')->execute([$orderId,'hosting',null,'hosting',$r['domain_name'],$desc,$price,$currency,$cycle]);
+      $invoiceNo='INV-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(3)));
+      $db->prepare('INSERT INTO invoices(order_id,user_id,invoice_number,subtotal,tax,discount_amount,total,currency,status) VALUES(?,?,?,?,?,?,?,?,?)')->execute([$orderId,$r['user_id'],$invoiceNo,$price,0,0,$price,$currency,'unpaid']);
+      $db->prepare("UPDATE custom_hosting_requests SET status='converted',converted_order_id=?,admin_note=? WHERE id=?")->execute([$orderId,trim((string)($_POST['admin_note']??$r['admin_note'])),$id]);
+      $us=$db->prepare('SELECT * FROM users WHERE id=?');$us->execute([$r['user_id']]);$uu=$us->fetch(); if($uu) wdh_customer_message($db,$uu,'Custom hosting quote ready','Your custom hosting quote is ready. Please review the invoice and submit payment.','order-details.php?order='.urlencode($orderNo),'custom_hosting_quote',$orderId);
+      $al=$db->prepare('INSERT INTO audit_log(admin_user_id,action,entity_type,entity_id,details_json) VALUES(?,?,?,?,?)');$al->execute([current_user()['id'],'custom_hosting_order_created','custom_hosting_request',$id,json_encode(['order_id'=>$orderId])]);
+      $db->commit(); $notice='Custom order and invoice created successfully.';
+    } else throw new RuntimeException('Invalid action.');
+  }catch(Throwable $e){if($db&&$db->inTransaction())$db->rollBack();$error=$e->getMessage();}
+}
+$rows=$db?$db->query('SELECT r.*,u.full_name,u.email FROM custom_hosting_requests r LEFT JOIN users u ON u.id=r.user_id ORDER BY FIELD(r.status,"submitted","quoted","converted"),r.id DESC')->fetchAll():[];
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Custom Hosting Requests — WDH</title><link rel="stylesheet" href="assets/css/style.css?v=wdh-ui-v8"><link rel="stylesheet" href="assets/css/catalog.css?v=wdh-ui-v8"></head><body><?php require __DIR__.'/includes/header.php';?><main class="admin-page"><div class="portal-welcome"><div><span class="eyebrow mint">ADMIN</span><h1>Custom Hosting Requests</h1><p>Review requirements, set a custom price, and generate a customer invoice/order.</p></div><a class="btn secondary" href="admin.php">Products & Pricing</a></div><?php if($notice):?><div class="alert success-alert"><?=e($notice)?></div><?php endif;?><?php if($error):?><div class="alert error"><?=e($error)?></div><?php endif;?><div class="admin-table"><?php if(!$rows):?><div class="empty">No requests yet.</div><?php else:foreach($rows as $r):?><section class="cart-card" style="margin-bottom:16px"><div class="portal-welcome"><div><strong>#<?=e($r['id'])?> · <?=e($r['full_name']??'')?> · <?=e($r['email']??'')?></strong><small>Submitted <?=e($r['created_at'])?> · <?=e(ucwords(str_replace('_',' ',$r['status'])))?></small></div></div><div class="dashboard-grid"><div><strong>Domain</strong><div><?=e($r['domain_name']?:'Not specified')?></div></div><div><strong>Storage</strong><div><?=e($r['requested_storage_gb'])?> GB</div></div><div><strong>Transfer</strong><div><?=e($r['requested_transfer_gb']?:'Not specified')?> GB</div></div><div><strong>Management</strong><div><?=e(ucwords(str_replace('_',' ',$r['management_type'])))?></div></div></div><p><strong>Requirements:</strong><br><?=nl2br(e($r['requirements']?:'—'))?></p><?php if(!$r['converted_order_id']):?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="id" value="<?=$r['id']?>"><div class="dashboard-grid"><label>Quote Name<input name="quoted_product_name" value="<?=e($r['quoted_product_name']?:'Custom Hosting')?>"></label><label>Price<input type="number" min="1" step="1" name="quoted_price" value="<?=e($r['quoted_price']??'')?>" required></label><label>Currency<select name="quoted_currency"><option value="BDT" <?=($r['quoted_currency']==='BDT'||!$r['quoted_currency'])?'selected':''?>>BDT</option><option value="USD" <?=$r['quoted_currency']==='USD'?'selected':''?>>USD</option></select></label></div><label>Admin Note<textarea name="admin_note" rows="3"><?=e($r['admin_note']??'')?></textarea></label><button class="btn secondary small" name="action" value="quote">Save Quote</button><?php if($r['quoted_price']!==null):?><button class="btn primary small" name="action" value="create_order">Create Order + Invoice</button><?php endif;?></form><?php else:?><div class="alert success-alert">Converted to Order #<?=e($r['converted_order_id'])?>. The customer can review the invoice and submit payment.</div><?php endif;?></section><?php endforeach;endif;?></div></main><?php require __DIR__.'/includes/footer.php';?></body></html>

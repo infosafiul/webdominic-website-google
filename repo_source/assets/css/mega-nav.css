@@ -1,0 +1,264 @@
+/* ==========================================================================
+   WDH MEGA NAVIGATION
+   New file, isolated from the site's existing (legacy) .nav-dropdown CSS
+   in style.css, which is left untouched. Uses the site's existing CSS
+   custom properties (--bg, --surface, --text, --muted, --line, --blue,
+   --dark, --purple, --shadow) so it inherits light/dark theme automatically.
+   ========================================================================== */
+
+.mega-nav-css-scope { all: unset; } /* namespace marker, unused — kept out of the way */
+
+/* ---- shared icon sizing ---- */
+.mega-trigger-icon,.mega-chevron,.mega-link-icon,.mega-panel-head-icon svg,.mega-promo-icon svg{flex:none}
+.mega-trigger-icon{width:16px;height:16px}
+.mega-chevron{width:13px;height:13px;opacity:.65;transition:transform .18s ease}
+.mega-link-icon{width:16px;height:16px;color:var(--blue);opacity:.85}
+.icon-menu-open,.icon-menu-close{width:22px;height:22px}
+
+/* ==========================================================================
+   DESKTOP (>=901px)
+   ========================================================================== */
+@media (min-width:901px){
+  .nav-scrim{display:none !important}
+  .mobile-header-actions{display:none}
+  .mega-nav-mobile-foot{display:none}
+  .mega-nav-mobile-head{display:none}
+
+  .header nav.mega-nav{display:flex !important;align-items:center}
+  .mega-badge{display:none}
+  /* The site has a legacy `.header nav{padding-right:80px !important; gap:31px !important}`
+     rule (tuned for the old, shorter nav). It also matches this new nav since
+     this is still a <nav> inside .header, and swallows ~80px of the width
+     8 categories need. Countered here with a selector specific enough to
+     win over it, rather than editing that shared legacy rule. */
+  .header nav.mega-nav{padding-right:0 !important;gap:0 !important}
+  .mega-list{display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0}
+  .mega-item{position:relative}
+  .mega-item--ai .mega-trigger{color:var(--purple)}
+
+  .mega-trigger-icon{display:none} /* desktop matches the reference mockups: top-level words have no icon, only submenu items do */
+  .mega-trigger-short{display:none}
+  .mega-trigger-row{display:flex;align-items:center;border-radius:8px}
+  .mega-trigger-row:hover,.mega-trigger-row:focus-within{background:rgba(255,255,255,.08)}
+  .mega-trigger{display:flex;align-items:center;gap:5px;padding:10px 1px 10px 6px;font-size:15px;font-weight:750;letter-spacing:-.1px;color:#e7edf7 !important;white-space:nowrap}
+  .mega-trigger-row:hover .mega-trigger,.mega-trigger:focus-visible{color:#8fb2ff !important}
+  .mega-item--ai .mega-trigger{color:#cdbaff !important}
+  .mega-item--ai .mega-trigger-row:hover .mega-trigger{color:#e0d4ff !important}
+  .mega-chevron-btn{display:flex;align-items:center;padding:10px 5px 10px 1px;border:0;background:transparent;color:#e7edf7;cursor:pointer;opacity:.85}
+  .mega-trigger-row:hover .mega-chevron-btn{opacity:1;color:#8fb2ff}
+  .mega-item--ai .mega-chevron-btn{color:#cdbaff}
+  .mega-chevron-btn:focus-visible{outline:2px solid #8fb2ff;outline-offset:-2px;border-radius:6px}
+
+  /* invisible hover-bridge so the dropdown doesn't vanish while the pointer
+     travels from the trigger down into the panel */
+  .mega-item::after{content:"";position:absolute;left:-20px;right:-20px;top:100%;height:16px}
+
+  .mega-panel{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%) translateY(6px);min-width:280px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(20,40,80,.16);padding:8px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:70}
+  .mega-item:first-child .mega-panel{left:0;transform:translateX(0) translateY(6px)}
+  .mega-item:last-child .mega-panel{left:auto;right:0;transform:translateX(0) translateY(6px)}
+
+  .mega-item:hover .mega-panel,
+  .mega-item:focus-within .mega-panel,
+  .mega-item.is-open .mega-panel{
+    opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0)
+  }
+  .mega-item:first-child:hover .mega-panel,.mega-item:first-child:focus-within .mega-panel,.mega-item:first-child.is-open .mega-panel{transform:translateX(0) translateY(0)}
+  .mega-item:last-child:hover .mega-panel,.mega-item:last-child:focus-within .mega-panel,.mega-item:last-child.is-open .mega-panel{transform:translateX(0) translateY(0)}
+  .mega-item:hover .mega-chevron,.mega-item:focus-within .mega-chevron,.mega-item.is-open .mega-chevron{transform:rotate(180deg)}
+
+  .mega-panel-inner{width:max-content;max-width:min(78vw,720px)}
+  .mega-panel-head{display:flex;align-items:center;gap:9px;padding:10px 12px 12px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .mega-panel-head-icon{width:30px;height:30px;border-radius:9px;background:rgba(18,97,255,.09);color:var(--blue);display:grid;place-items:center}
+  .mega-panel-head-icon svg{width:16px;height:16px}
+  .mega-panel-head strong{font-size:14px;color:var(--text)}
+  .mega-item--ai .mega-panel-head-icon{background:rgba(118,83,237,.12);color:var(--purple)}
+
+  .mega-cols{display:flex;gap:6px}
+  .mega-cols-1{min-width:250px}
+  .mega-cols-2 .mega-col{min-width:210px}
+  .mega-cols-3 .mega-col{min-width:190px}
+  .mega-col{display:flex;flex-direction:column;gap:14px;padding:2px 10px}
+  .mega-col:not(:first-child){border-left:1px solid var(--line)}
+
+  .mega-group h4{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 6px;padding:0 6px}
+  .mega-group ul{list-style:none;margin:0;padding:0}
+  .mega-group li a{display:flex;align-items:center;gap:9px;padding:7px 6px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--text)}
+  .mega-group li a:hover,.mega-group li a:focus-visible{background:rgba(18,97,255,.07);color:var(--blue)}
+  .mega-group li a:hover .mega-link-icon,.mega-group li a:focus-visible .mega-link-icon{color:var(--blue)}
+
+  .mega-promo{margin-top:10px;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(18,97,255,.07),rgba(18,97,255,.02));border:1px solid rgba(18,97,255,.14)}
+  .mega-promo:hover{background:linear-gradient(135deg,rgba(18,97,255,.11),rgba(18,97,255,.04))}
+  .mega-promo--ai{background:linear-gradient(135deg,rgba(118,83,237,.09),rgba(56,131,255,.05));border-color:rgba(118,83,237,.18)}
+  .mega-promo--ai:hover{background:linear-gradient(135deg,rgba(118,83,237,.14),rgba(56,131,255,.08))}
+  .mega-promo-icon{width:34px;height:34px;border-radius:9px;background:var(--surface);color:var(--blue);display:grid;place-items:center;flex:none;box-shadow:var(--shadow)}
+  .mega-promo--ai .mega-promo-icon{color:var(--purple)}
+  .mega-promo-icon svg{width:17px;height:17px}
+  .mega-promo-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .mega-promo-text strong{font-size:12px;color:var(--text)}
+  .mega-promo-text small{font-size:10.5px;color:var(--muted);line-height:1.3}
+  .mega-promo-cta{font-size:11px;font-weight:800;color:var(--blue);display:flex;align-items:center;gap:4px;flex:none}
+  .mega-promo-cta svg{width:13px;height:13px}
+
+  .mega-footer-link{display:flex;align-items:center;gap:6px;margin:10px 6px 4px;font-size:12px;font-weight:800;color:var(--blue)}
+  .mega-footer-link svg{width:14px;height:14px}
+
+  .header-actions .cart{color:#fff !important}
+  .header-actions .cart .icon{color:#fff !important;stroke:currentColor !important;opacity:1 !important;visibility:visible !important}
+  .account-control--labeled{width:auto;height:38px;border-radius:8px;padding:0 14px !important;gap:6px;font-size:12px;font-weight:800}
+  .account-control--labeled svg{width:15px;height:15px}
+  .header-text-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25);color:#fff !important;padding:0 14px;height:38px;border-radius:8px;font-size:12px;font-weight:800;background:rgba(255,255,255,.06)}
+  .header-text-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4)}
+  .header-text-btn svg{width:15px;height:15px}
+  .portal{display:inline-flex;align-items:center;gap:6px}
+  .portal svg{width:15px;height:15px}
+}
+
+/* Tablet: keep mega-menu but trim to fit narrower viewports */
+@media (min-width:901px) and (max-width:1399px){
+  .mega-list{gap:0}
+  .mega-trigger{padding:10px 1px 10px 5px;font-size:10px}
+  .mega-chevron-btn{padding:10px 4px 10px 0}
+  .mega-trigger-full{display:none}
+  .mega-trigger-short{display:inline}
+  .mega-panel-inner{max-width:min(90vw,600px)}
+  .mega-cols-3{flex-wrap:wrap}
+  .mega-cols-3 .mega-col{min-width:180px;flex:1 1 45%}
+  .mega-cols-3 .mega-col:nth-child(3){border-left:0;padding-top:0}
+  .header-text-btn span{display:none}
+  .header-text-btn{padding:0 10px}
+  .portal span{display:none}
+  .account-control--labeled span{display:none}
+  .account-control--labeled{padding:0 10px !important}
+  .portal{padding:0 10px}
+}
+
+/* ==========================================================================
+   MOBILE (<=900px) — ONE single slide-in panel with an accordion tree.
+   No separate screens per category: every category's items live in the
+   same scrollable panel, expanding downward in place.
+   ========================================================================== */
+@media (max-width:900px){
+  .mobile-header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+  .mobile-header-actions .cart{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+  /* Badge must hug the icon itself, not the enlarged 44x44 touch target box,
+     otherwise it visually detaches from the icon (floats up/right toward the
+     hamburger). This wrapper is sized to the icon so the badge's absolute
+     top/right offsets (set on .cart b elsewhere) resolve against it instead. */
+  .mobile-header-actions .cart-icon-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+  .mobile-menu{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:9px;position:relative}
+  .mobile-menu:hover{background:rgba(18,97,255,.07)}
+  .icon-menu-close{display:none;position:absolute}
+  .icon-menu-open{position:absolute}
+  .mobile-menu[aria-expanded="true"] .icon-menu-open{display:none}
+  .mobile-menu[aria-expanded="true"] .icon-menu-close{display:block}
+
+  .nav-scrim{position:fixed;inset:0;background:rgba(4,12,28,.45);z-index:59}
+  .nav-scrim[hidden]{display:none}
+
+  /* .header uses backdrop-filter, which (like `transform`/`filter`) creates a
+     new CSS containing block for `position:fixed` descendants — so without
+     this, the slide-in panel below would position itself relative to
+     .header's box instead of the real viewport and never reach full height.
+     Suspended only while the panel is open; the blur effect is unaffected
+     the rest of the time. */
+  body.nav-open .header{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+
+  .header nav.mega-nav, body > nav.mega-nav{display:block !important;position:fixed;top:0;right:0;bottom:0;left:auto;width:min(360px,88vw);max-width:400px;background:var(--surface);z-index:60;transform:translateX(100%);transition:transform .26s ease;overflow-y:auto;overflow-x:hidden;padding:0 0 24px;border-bottom:0;box-shadow:-18px 0 50px rgba(10,20,45,.22)}
+  .header nav.mega-nav.is-open, body > nav.mega-nav.is-open{transform:translateX(0)}
+
+  /* In-panel header: logo + its own close button. Bleeds to the panel's
+     edges (the panel itself carries no side padding on mobile any more —
+     .mega-list/.mega-nav-mobile-foot below add their own instead) so this
+     bar always spans full width regardless of scroll position. */
+  .mega-nav-mobile-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 14px;background:#0a1128}
+  .mega-nav-mobile-logo{height:26px;width:auto;display:block}
+  .mega-nav-close{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:0;background:rgba(255,255,255,.08);color:#fff}
+  .mega-nav-close:active{background:rgba(255,255,255,.16)}
+  .mega-nav-close .icon{width:18px;height:18px}
+
+  .mega-list{list-style:none;margin:0;padding:0 14px;display:flex;flex-direction:column;gap:2px}
+  .mega-item{border-bottom:1px solid var(--line)}
+  .mega-item:last-child{border-bottom:0}
+
+  .mega-trigger-row{display:flex;align-items:stretch}
+  .mega-trigger{display:flex;align-items:center;gap:11px;padding:13px 4px 13px 8px;min-height:48px;font-size:14px;font-weight:750;color:var(--text);flex:1}
+  .mega-trigger-icon{width:19px;height:19px;color:var(--blue)}
+  .mega-item--ai .mega-trigger-icon{color:var(--purple)}
+  .mega-trigger-full{display:inline;flex:0 1 auto;min-width:0}
+  .mega-trigger-short{display:none}
+  .mega-badge{flex:0 0 auto;align-self:center;background:var(--purple);color:#fff;font-size:9px;font-weight:900;letter-spacing:.3px;padding:3px 7px;border-radius:999px;text-transform:uppercase;white-space:nowrap;line-height:1.4}
+  .mega-chevron-btn{display:flex;align-items:center;justify-content:center;width:44px;min-height:48px;border:0;background:transparent;color:var(--text)}
+  .mega-chevron{width:16px;height:16px;transition:transform .22s ease}
+  .mega-item.is-open .mega-chevron-btn .mega-chevron{transform:rotate(180deg)}
+
+  /* Accordion body: collapsed via max-height, expands downward in place */
+  .mega-panel{max-height:0;overflow:hidden;opacity:0;transition:max-height .28s ease,opacity .22s ease;background:transparent;border:0;box-shadow:none;position:static;transform:none;padding:0}
+  .mega-item.is-open .mega-panel{max-height:2000px;opacity:1}
+  .mega-panel-inner{width:auto;max-width:none;padding:2px 0 14px 8px}
+  .mega-panel-head{display:none} /* the accordion row above already shows icon+title */
+
+  .mega-cols,.mega-cols-2,.mega-cols-3{display:flex;flex-direction:column;gap:0}
+  .mega-col{padding:0;position:relative;padding-left:16px}
+  .mega-col:not(:first-child){border-left:0;margin-top:0}
+  /* vertical tree connector line */
+  .mega-col::before{content:"";position:absolute;left:5px;top:6px;bottom:14px;width:1px;background:var(--line)}
+
+  .mega-group{margin-bottom:0}
+  .mega-group h4{display:none} /* flat list on mobile, matching the reference design — groups still separate the desktop columns */
+  .mega-group ul{list-style:none;margin:0;padding:0}
+  .mega-group li{position:relative}
+  /* tree branch: connector line + small dot, matching the reference design */
+  .mega-group li::before{content:"";position:absolute;left:-11px;top:22px;width:10px;height:1px;background:var(--line)}
+  .mega-group li::after{content:"";position:absolute;left:-13px;top:19px;width:5px;height:5px;border-radius:50%;background:var(--line)}
+  .mega-group li a{display:flex;align-items:center;gap:10px;padding:11px 8px;min-height:44px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text)}
+  .mega-group li a:active,.mega-group li a:focus-visible{background:rgba(18,97,255,.08)}
+  .mega-link-icon{display:none} /* flat list on mobile, matching the reference design */
+
+  .mega-promo{margin:10px 0 4px 8px;display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:rgba(18,97,255,.06);border:1px solid rgba(18,97,255,.14)}
+  .mega-promo--ai{background:rgba(118,83,237,.08);border-color:rgba(118,83,237,.16)}
+  .mega-promo-icon{width:30px;height:30px;border-radius:8px;background:var(--surface);color:var(--blue);display:grid;place-items:center;flex:none}
+  .mega-promo--ai .mega-promo-icon{color:var(--purple)}
+  .mega-promo-icon svg{width:15px;height:15px}
+  .mega-promo-text strong{font-size:11.5px;color:var(--text);display:block}
+  .mega-promo-text small{font-size:10px;color:var(--muted)}
+  .mega-promo-cta{display:none}
+
+  .mega-footer-link{display:flex;align-items:center;gap:6px;margin:8px 0 4px 8px;padding:8px;font-size:12.5px;font-weight:800;color:var(--blue)}
+  .mega-footer-link svg{width:14px;height:14px}
+
+  .mega-nav-mobile-foot{display:flex;flex-direction:column;gap:10px;margin-top:16px;padding:16px 14px 0;border-top:1px solid var(--line)}
+  .mega-mobile-btn-row{display:flex;gap:10px}
+  .mega-mobile-btn-row .mega-mobile-btn{flex:1}
+  .mega-mobile-logout{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:2px 0}
+  .mega-mobile-contact{display:flex;align-items:center;gap:10px;padding:10px 4px 2px;color:var(--text)}
+  .mega-mobile-contact .icon{width:17px;height:17px;color:var(--blue);flex:none}
+  .mega-mobile-contact strong{display:block;font-size:13px}
+  .mega-mobile-contact small{display:block;font-size:11px;color:var(--muted)}
+  .mega-mobile-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:10px;font-size:13px;font-weight:800;background:var(--blue);color:#fff}
+  .mega-mobile-btn svg{width:16px;height:16px}
+  .mega-mobile-btn--ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+
+  .header-actions{display:none} /* desktop cart/login/portal cluster replaced by mobile-header-actions + mega-nav-mobile-foot */
+  body.nav-open{overflow:hidden}
+}
+
+/* ==========================================================================
+   DARK MODE
+   ========================================================================== */
+[data-theme=dark] .mega-panel{box-shadow:0 20px 50px rgba(0,0,0,.4)}
+[data-theme=dark] .mega-trigger:hover,[data-theme=dark] .mega-trigger:focus-visible{background:rgba(56,131,255,.14)}
+[data-theme=dark] .mega-item--ai .mega-trigger:hover,[data-theme=dark] .mega-item--ai .mega-trigger:focus-visible{background:rgba(148,120,255,.16)}
+[data-theme=dark] .mega-group li a:hover,[data-theme=dark] .mega-group li a:focus-visible,[data-theme=dark] .mega-group li a:active{background:rgba(56,131,255,.16)}
+[data-theme=dark] .mega-panel-head-icon{background:rgba(56,131,255,.18)}
+[data-theme=dark] .mega-item--ai .mega-panel-head-icon{background:rgba(148,120,255,.2)}
+[data-theme=dark] .mega-promo{background:linear-gradient(135deg,rgba(56,131,255,.14),rgba(56,131,255,.04));border-color:rgba(56,131,255,.22)}
+[data-theme=dark] .mega-promo--ai{background:linear-gradient(135deg,rgba(148,120,255,.16),rgba(56,131,255,.06));border-color:rgba(148,120,255,.26)}
+[data-theme=dark] .nav-scrim{background:rgba(0,0,0,.6)}
+[data-theme=dark] .mega-nav{box-shadow:-18px 0 50px rgba(0,0,0,.5)}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion:reduce){
+  .mega-panel,.mega-chevron,.mega-nav,.mega-promo,.mega-trigger{transition:none !important}
+}

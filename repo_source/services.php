@@ -1,0 +1,1 @@
+<?php $category='service';$pageTitle='Website Services';$heroTitle='Websites That Look Great and Work Hard for Your Business';$heroSub='WordPress design, maintenance and SEO support from one trusted WDH team.';$plansTitle='Website & Digital Services';require __DIR__.'/catalog-template.php';

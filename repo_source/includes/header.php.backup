@@ -1,0 +1,37 @@
+<?php $flag = $LANG === 'bn' ? 'flag-bd' : 'flag-us'; ?>
+<div class="topbar"><div class="topbar-inner">
+  <span><?= icon('shield-check','tb-icon') ?> <?= t('topbar_since') ?></span>
+  <div class="contact"><span><?= icon('mail','tb-icon') ?> support@wdhdomain.com</span><span><?= icon('phone','tb-icon') ?> +1 (213) 986-7750</span></div>
+  <div class="topbar-right">
+    <div class="lang-switch">
+      <button class="top-btn" type="button"><?= icon($flag,'tb-flag') ?> <?= t('topbar_lang_label') ?> <?= icon('chevron-down','tb-chev') ?></button>
+      <div class="lang-menu">
+        <a href="<?= lang_url('en') ?>"><?= icon('flag-us','tb-flag') ?> English</a>
+        <a href="<?= lang_url('bn') ?>"><?= icon('flag-bd','tb-flag') ?> বাংলা</a>
+      </div>
+    </div>
+    <div class="currency-switch">
+      <a class="top-btn" href="<?= currency_url($CURRENCY === 'BDT' ? 'usd' : 'bdt') ?>" aria-label="Switch currency"><?= $CURRENCY === 'BDT' ? '৳ BDT' : '$ USD' ?></a>
+    </div>
+    <button class="top-btn" id="theme" type="button" aria-label="Toggle dark mode"><?= icon('sun','tb-icon') ?> <?= t('topbar_light') ?>&nbsp;&nbsp;<?= icon('moon','tb-icon') ?> <?= t('topbar_dark') ?></button>
+  </div>
+</div></div>
+<header class="header">
+  <a class="logo" href="index.php"><span>WDH</span><small>Web Data Hosting</small><em>EST. 2004</em></a>
+  <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Menu"><?= icon('menu') ?></button>
+  <nav id="main-nav" aria-label="Main navigation">
+    <a href="domains.php"><?= t('nav_domains') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <div class="nav-dropdown"><a href="hosting.php"><?= t('nav_hosting') ?> <?= icon('chevron-down','nav-chev') ?></a><div class="nav-dropdown-menu"><a href="hosting.php">Shared Hosting</a><a href="hosting.php#business">Business Hosting</a><a href="hosting.php#reseller">Reseller Hosting</a><a href="custom-hosting.php">Custom Hosting</a></div></div>
+    <a href="servers.php"><?= t('nav_servers') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <a href="business-email.php"><?= t('nav_email') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <a href="services.php"><?= t('nav_website') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <a href="security.php"><?= t('nav_security') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <a href="services.php"><?= t('nav_solutions') ?> <?= icon('chevron-down','nav-chev') ?></a>
+    <a href="services.php"><?= t('nav_more') ?> <?= icon('chevron-down','nav-chev') ?></a>
+  </nav>
+  <div class="header-actions">
+    <a class="cart" href="cart.php" aria-label="Cart"><?= icon('cart') ?><b><?= cart_count() ?></b></a><?php if(current_user()): $unread=wdh_unread_notifications($db,(int)current_user()['id']); ?><a class="cart notification-link" href="notifications.php" aria-label="Notifications"><?= icon('bell') ?><b><?= $unread ?></b></a><?php endif; ?>
+    <a class="login" href="login.php"><?= t('nav_login') ?></a>
+    <a class="portal" href="client.php"><?= t('nav_portal') ?></a>
+  </div>
+</header>

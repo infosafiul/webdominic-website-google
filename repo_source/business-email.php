@@ -1,0 +1,1 @@
+<?php $category='email';$pageTitle='Business Email';$heroTitle='Professional Business Email for a More Trusted Brand';$heroSub='Reliable business email with professional mailboxes, security and support.';$plansTitle='Business Email Plans';require __DIR__.'/catalog-template.php';

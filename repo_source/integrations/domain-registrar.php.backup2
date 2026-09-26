@@ -1,0 +1,342 @@
+<?php
+/**
+ * WDH Domain Registrar Adapter
+ *
+ * ResellerClub / OrderBox HTTP API integration.
+ *
+ * Revision 3:
+ * The previous batch response path could normalize a valid ResellerClub
+ * response incorrectly and the UI then displayed every result as
+ * "Unavailable".
+ *
+ * The batch function now deliberately performs one availability request per
+ * TLD using registrar_check_availability(), which is the same code path used
+ * by tools/test-registrar-api.php. This makes the web result page and the
+ * CLI test use the same availability logic.
+ */
+
+function registrar_config(): array {
+    $config = require __DIR__.'/../config.php';
+    $r = $config['registrar'] ?? [];
+
+    return [
+        'provider'  => strtolower((string)($r['provider'] ?? 'resellerclub')),
+        'username'  => (string)($r['username'] ?? $r['auth_userid'] ?? ''),
+        'auth_userid' => (string)($r['auth_userid'] ?? $r['username'] ?? ''),
+        'api_key'   => (string)($r['api_key'] ?? ''),
+        'environment' => strtolower((string)($r['environment'] ?? 'production')),
+    ];
+}
+
+function registrar_is_configured(): bool {
+    $c = registrar_config();
+
+    return $c['provider'] === 'resellerclub'
+        && $c['auth_userid'] !== ''
+        && $c['api_key'] !== '';
+}
+
+function registrar_api_base(): string {
+    $c = registrar_config();
+
+    /*
+     * ResellerClub production API.
+     * The test environment is retained for compatibility with the existing
+     * configuration if it is explicitly selected.
+     */
+    if ($c['environment'] === 'test' || $c['environment'] === 'sandbox') {
+        return 'https://test.httpapi.com/api';
+    }
+
+    return 'https://httpapi.com/api';
+}
+
+function registrar_http_get(string $path, array $params): array {
+    $c = registrar_config();
+
+    $params['auth-userid'] = $c['auth_userid'];
+    $params['api-key'] = $c['api_key'];
+
+    $url = rtrim(registrar_api_base(), '/')
+        . '/'
+        . ltrim($path, '/')
+        . '?'
+        . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => 25,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+        ],
+    ]);
+
+    $body = curl_exec($ch);
+    $errno = curl_errno($ch);
+    $error = curl_error($ch);
+    $http = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    curl_close($ch);
+
+    if ($body === false || $errno) {
+        return [
+            'success' => false,
+            'error' => 'Registrar connection failed.',
+            'detail' => $error ?: ('cURL error '.$errno),
+            'http_code' => $http,
+        ];
+    }
+
+    $data = json_decode($body, true);
+
+    /*
+     * ResellerClub may return a JSON object for this endpoint. If the body
+     * cannot be decoded, preserve the raw response for an internal caller
+     * without exposing credentials.
+     */
+    if (!is_array($data)) {
+        return [
+            'success' => false,
+            'error' => 'Registrar returned an invalid response.',
+            'http_code' => $http,
+        ];
+    }
+
+    if ($http >= 400) {
+        return [
+            'success' => false,
+            'error' => 'Registrar HTTP error.',
+            'http_code' => $http,
+            'response' => $data,
+        ];
+    }
+
+    return [
+        'success' => true,
+        'http_code' => $http,
+        'data' => $data,
+    ];
+}
+
+/**
+ * Normalize the many response shapes returned by ResellerClub/OrderBox.
+ */
+function registrar_normalize_api_node($node): array {
+    if (is_string($node) || is_numeric($node) || is_bool($node)) {
+        $value = strtolower(trim((string)$node));
+
+        if (in_array($value, ['available', 'true', '1', 'yes'], true)) {
+            return [
+                'available' => true,
+                'status' => 'available',
+                'registrar_cost' => null,
+            ];
+        }
+
+        if (in_array($value, ['unavailable', 'false', '0', 'no'], true)) {
+            return [
+                'available' => false,
+                'status' => 'unavailable',
+                'registrar_cost' => null,
+            ];
+        }
+    }
+
+    if (!is_array($node)) {
+        return [
+            'available' => false,
+            'status' => 'error',
+            'registrar_cost' => null,
+        ];
+    }
+
+    $status = '';
+
+    foreach ([
+        $node['status'] ?? null,
+        $node['availability'] ?? null,
+        $node['available'] ?? null,
+        $node['isAvailable'] ?? null,
+    ] as $candidate) {
+        if ($candidate === null || $candidate === '') {
+            continue;
+        }
+
+        if (is_bool($candidate) || is_numeric($candidate)) {
+            $status = ((int)$candidate === 1) ? 'available' : 'unavailable';
+        } else {
+            $status = strtolower(trim((string)$candidate));
+        }
+
+        break;
+    }
+
+    if (in_array($status, ['true', '1', 'yes'], true)) {
+        $status = 'available';
+    }
+
+    if (in_array($status, ['false', '0', 'no'], true)) {
+        $status = 'unavailable';
+    }
+
+    if (!in_array($status, ['available', 'unavailable', 'error'], true)) {
+        $status = 'error';
+    }
+
+    $cost = null;
+
+    foreach ([
+        $node['customer_price'] ?? null,
+        $node['selling_price'] ?? null,
+        $node['price'] ?? null,
+        $node['costHash'] ?? null,
+        $node['cost'] ?? null,
+    ] as $candidate) {
+        if (is_numeric($candidate)) {
+            $cost = $candidate;
+            break;
+        }
+
+        if (is_array($candidate)) {
+            foreach ($candidate as $v) {
+                if (is_numeric($v)) {
+                    $cost = $v;
+                    break 2;
+                }
+            }
+        }
+    }
+
+    return [
+        'available' => $status === 'available',
+        'status' => $status,
+        'registrar_cost' => $cost,
+        'customer_price' => $node['customer_price'] ?? null,
+        'price' => $node['price'] ?? null,
+        'raw' => $node,
+    ];
+}
+
+/**
+ * Check one domain.
+ *
+ * This is the same method used by the CLI tool.
+ */
+function registrar_check_availability(string $sld, string $tld): array {
+    $sld = strtolower(trim($sld));
+    $tld = strtolower(ltrim(trim($tld), '.'));
+
+    if ($sld === '' || $tld === '') {
+        return [
+            'available' => false,
+            'status' => 'error',
+            'error' => 'Invalid domain name.',
+        ];
+    }
+
+    if (!registrar_is_configured()) {
+        return [
+            'available' => false,
+            'status' => 'error',
+            'error' => 'Registrar is not configured.',
+        ];
+    }
+
+    $domain = $sld.'.'.$tld;
+
+    $response = registrar_http_get('/domains/available.json', [
+        'domain-name' => $domain,
+        'suggest-alternative' => 'false',
+    ]);
+
+    if (!$response['success']) {
+        return [
+            'available' => false,
+            'status' => 'error',
+            'error' => $response['error'] ?? 'Registrar request failed.',
+            'detail' => $response['detail'] ?? null,
+        ];
+    }
+
+    $data = $response['data'] ?? [];
+
+    /*
+     * Standard ResellerClub shape:
+     * {
+     *   "example.com": {
+     *      "status": "available",
+     *      ...
+     *   }
+     * }
+     *
+     * Be tolerant of a direct node or a nested data/result wrapper too.
+     */
+    $node = null;
+
+    if (isset($data[$domain])) {
+        $node = $data[$domain];
+    } elseif (isset($data['data'][$domain])) {
+        $node = $data['data'][$domain];
+    } elseif (isset($data['result'][$domain])) {
+        $node = $data['result'][$domain];
+    } elseif (
+        isset($data['status']) ||
+        isset($data['available']) ||
+        isset($data['availability'])
+    ) {
+        $node = $data;
+    } elseif (count($data) === 1) {
+        $first = reset($data);
+        $node = $first;
+    }
+
+    $normalized = registrar_normalize_api_node($node);
+
+    $normalized['domain'] = $domain;
+
+    return $normalized;
+}
+
+function registrar_status_label(array $result): string {
+    $status = strtolower((string)($result['status'] ?? ''));
+
+    if ($status === 'available' || !empty($result['available'])) {
+        return 'Available';
+    }
+
+    if ($status === 'error') {
+        return 'Error';
+    }
+
+    return 'Unavailable';
+}
+
+/**
+ * Check multiple TLDs.
+ *
+ * Deliberately uses the exact same single-domain method as the CLI test.
+ * Six small requests are preferable here to a faulty batch response parser,
+ * and this keeps the web page's result logic deterministic.
+ */
+function registrar_check_availability_batch(string $sld, array $tlds): array {
+    $out = [];
+
+    foreach ($tlds as $tld) {
+        $tld = strtolower(ltrim(trim((string)$tld), '.'));
+
+        if ($tld === '') {
+            continue;
+        }
+
+        $domain = strtolower($sld.'.'.$tld);
+        $out[$domain] = registrar_check_availability($sld, $tld);
+    }
+
+    return $out;
+}

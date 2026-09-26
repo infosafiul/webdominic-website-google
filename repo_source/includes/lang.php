@@ -1,0 +1,217 @@
+<?php
+/**
+ * WDH i18n string table.
+ * $i18n['en'][...] / $i18n['bn'][...] — accessed via t('key').
+ * Keep both language arrays with the SAME keys.
+ */
+$i18n = [];
+
+$i18n['en'] = [
+    // topbar
+    'topbar_since'      => 'Since 2004 – Trusted by Businesses',
+    'topbar_lang_label' => 'English',
+    'topbar_light'      => 'Light',
+    'topbar_dark'       => 'Dark',
+
+    // nav
+    'nav_domains'       => 'Domains',
+    'nav_hosting'       => 'Hosting',
+    'nav_servers'       => 'Servers',
+    'nav_websites'      => 'Websites',
+    'nav_ai'             => 'AI Solutions',
+    'nav_email'         => 'Business Email',
+    'nav_website'       => 'Website Services',
+    'nav_security'      => 'Security',
+    'nav_solutions'     => 'Solutions',
+    'nav_more'          => 'More',
+    'nav_login'         => 'Login',
+    'nav_portal'        => 'Client Portal',
+    'currency_label'    => 'USD $',
+
+    // hero
+    'hero_badge'        => 'SINCE 2004',
+    'hero_h1_l1'        => "We Don't Just",
+    'hero_h1_l2'        => 'Host Your Website.',
+    'hero_h1_l3a'       => 'We Help',
+    'hero_h1_l3b'       => 'Keep It Running.',
+    'hero_sub'          => 'Business Hosting, Websites, Servers &amp; Business Email —<br>backed by experienced technical support.',
+    'hero_cta_primary'  => 'Explore Solutions',
+    'hero_cta_secondary'=> 'Talk to a Specialist',
+    'trust_1'           => 'USA-Based<br>Infrastructure',
+    'trust_2'           => '99.9%<br>Uptime',
+    'trust_3'           => '24/7 Expert<br>Support',
+    'trust_4'           => 'Secure &amp;<br>Reliable',
+    'hero_card_h'       => 'USA-Based Infrastructure<br>Built for Businesses.',
+    'hero_card_sub'     => 'Reliable. Secure. High Performance.',
+    'hero_card_1'       => 'High Performance',
+    'hero_card_2'       => '99.9% Uptime Guarantee',
+    'hero_card_3'       => 'Enterprise Security',
+    'hero_card_4'       => 'DDoS Protection',
+    'hero_card_5'       => 'Daily Backups',
+
+    // domain search
+    'domain_h'          => 'Find Your Perfect Domain',
+    'domain_sub'        => 'Search for your domain name and build your online identity.',
+    'domain_placeholder'=> 'e.g. yourdomain.com',
+    'domain_search_btn' => 'Search Domain',
+    'domain_view_all'   => 'View All Domains',
+
+    // features (why choose us)
+    'why_eyebrow'       => 'WHY CHOOSE WDH?',
+    'why_h'             => 'Reliable infrastructure. Built for your business.',
+    'learn_more'        => 'Learn More',
+    'f1_title' => 'USA-Based Infrastructure', 'f1_desc' => 'Trusted data centers located in the USA.',
+    'f2_title' => 'High Performance Network', 'f2_desc' => 'High speed &amp; reliable network connectivity.',
+    'f3_title' => 'Enterprise-Grade Security', 'f3_desc' => 'Advanced firewall, DDoS protection &amp; more.',
+    'f4_title' => 'Secure Backups &amp; Data Protection', 'f4_desc' => 'Daily backups &amp; data protection you can trust.',
+    'f5_title' => '24/7 Expert Support', 'f5_desc' => 'Our expert team is always here to help.',
+
+    // services
+    'services_eyebrow'  => 'EVERYTHING YOUR BUSINESS NEEDS',
+    'services_h_a'      => 'Powerful Solutions.',
+    'services_h_b'      => 'One Trusted Partner.',
+    'services_sub'      => 'Start with what you need today, and add more services as your business grows.',
+    'explore'           => 'Explore',
+    's1_title' => 'Domains', 's1_desc' => 'Find the perfect domain for your business.', 's1_cta' => 'View Domains',
+    's2_title' => 'Web Hosting', 's2_desc' => 'Fast, secure &amp; reliable hosting for any site.', 's2_cta' => 'View Web Hosting Plans',
+    's3_title' => 'Business Email', 's3_desc' => 'Professional email that builds trust.', 's3_cta' => 'View Business Email Plans',
+    's4_title' => 'Servers', 's4_desc' => 'Powerful VPS &amp; dedicated server solutions.', 's4_cta' => 'View Plans',
+    's5_title' => 'Website Services', 's5_desc' => 'Build, redesign &amp; manage your website.', 's5_cta' => 'View Services',
+    's6_title' => 'Security', 's6_desc' => 'Protect your website and data with powerful security.', 's6_cta' => 'View Security Plans',
+    's7_title' => 'Applications', 's7_desc' => 'Host web applications, APIs and databases.', 's7_cta' => 'View Plans',
+    's8_title' => 'Industry Solutions', 's8_desc' => 'Tailored solutions for your business needs.', 's8_cta' => 'View Solutions',
+    's9_title' => 'Support', 's9_desc' => '24/7 expert support whenever you need it.', 's9_cta' => 'Get Support',
+    's10_title'=> 'SSL Certificates', 's10_desc'=> 'Secure your site and build customer trust.', 's10_cta'=> 'View SSL Plans',
+
+    // stats
+    'stat_1_n' => '20+', 'stat_1_l' => 'Years of Experience<br>(Since 2004)',
+    'stat_2_n' => '10,000+', 'stat_2_l' => 'Happy Clients<br>Worldwide',
+    'stat_3_n' => '60,000+', 'stat_3_l' => 'Websites Hosted<br>and Growing',
+    'stat_4_n' => '99.9%', 'stat_4_l' => 'Uptime<br>Guarantee',
+    'stat_5_n' => '24/7/365', 'stat_5_l' => 'Expert Support<br>Always Here',
+
+    // final cta
+    'cta_h'      => 'Not sure which solution is right for you?',
+    'cta_sub'    => "Get free advice from our experts. We'll help you find the best domain, hosting, server or email solution for your business.",
+    'cta_btn_1'  => 'Get Free Consultation',
+    'cta_btn_2'  => 'Talk to a Specialist',
+
+    // footer
+    'footer_tagline'   => 'Reliable hosting and digital solutions for businesses worldwide.',
+    'footer_services'  => 'Services',
+    'footer_solutions' => 'Solutions',
+    'footer_company'   => 'Company',
+    'footer_resources' => 'Resources',
+    'footer_accept'    => 'We Accept',
+    'fs_1'=>'Domains','fs_2'=>'Hosting','fs_3'=>'Servers','fs_4'=>'Business Email','fs_5'=>'Website Services','fs_6'=>'Security',
+    'fsol_1'=>'For Business','fsol_2'=>'For Developers','fsol_3'=>'For eCommerce','fsol_4'=>'For Agencies','fsol_5'=>'Industry Solutions',
+    'fc_1'=>'About Us','fc_2'=>'Why WDH?','fc_3'=>'Our Data Centers','fc_4'=>'Careers','fc_5'=>'Contact Us',
+    'fr_1'=>'Blog','fr_2'=>'Knowledge Base','fr_3'=>'Tutorials','fr_4'=>'Status Updates','fr_5'=>'Affiliates',
+    'footer_copyright' => '© 2004 – '.date('Y').' WDH. All rights reserved.',
+    'footer_support'   => '24/7 Human Support',
+];
+
+$i18n['bn'] = [
+    // topbar
+    'topbar_since'      => '২০০৪ সাল থেকে – আপনার বিশ্বস্ত অংশীদার',
+    'topbar_lang_label' => 'বাংলা',
+    'topbar_light'      => 'লাইট',
+    'topbar_dark'       => 'ডার্ক',
+
+    // nav
+    'nav_domains'       => 'ডোমেইন',
+    'nav_hosting'       => 'হোস্টিং',
+    'nav_servers'       => 'সার্ভার',
+    'nav_websites'      => 'ওয়েবসাইট',
+    'nav_ai'             => 'এআই সমাধান',
+    'nav_email'         => 'ইমেইল সেবা',
+    'nav_website'       => 'ওয়েবসাইট সেবা',
+    'nav_security'      => 'সিকিউরিটি',
+    'nav_solutions'     => 'সমাধানসমূহ',
+    'nav_more'          => 'আরও',
+    'nav_login'         => 'লগইন',
+    'nav_portal'        => 'ক্লায়েন্ট পোর্টাল',
+    'currency_label'    => 'BDT ৳',
+
+    // hero
+    'hero_badge'        => '২০০৪ সাল থেকে',
+    'hero_h1_l1'        => 'আমরা শুধু হোস্ট করি না,',
+    'hero_h1_l2'        => 'আপনার ওয়েবসাইটকে',
+    'hero_h1_l3a'       => '',
+    'hero_h1_l3b'       => 'সবসময় সচল রাখি।',
+    'hero_sub'          => 'বিজনেস হোস্টিং, ওয়েবসাইট, সার্ভার এবং ইমেইল সেবা —<br>অভিজ্ঞ টেকনিক্যাল সাপোর্টের মাধ্যমে।',
+    'hero_cta_primary'  => 'সমাধান দেখুন',
+    'hero_cta_secondary'=> 'বিশেষজ্ঞের সাথে কথা বলুন',
+    'trust_1'           => 'USA-ভিত্তিক<br>ইনফ্রাস্ট্রাকচার',
+    'trust_2'           => '৯৯.৯%<br>আপটাইম নিশ্চিত',
+    'trust_3'           => '২৪/৭ বিশেষজ্ঞ<br>সাপোর্ট',
+    'trust_4'           => 'নিরাপত্তা ও<br>নির্ভরযোগ্যতা',
+    'hero_card_h'       => 'যুক্তরাষ্ট্রভিত্তিক ইনফ্রাস্ট্রাকচার,<br>ব্যবসার জন্য তৈরি।',
+    'hero_card_sub'     => 'নির্ভরযোগ্য। নিরাপদ। উচ্চ পারফরম্যান্স।',
+    'hero_card_1'       => 'উচ্চ পারফরম্যান্স সার্ভার',
+    'hero_card_2'       => '৯৯.৯% আপটাইম গ্যারান্টি',
+    'hero_card_3'       => 'এন্টারপ্রাইজ-গ্রেড নিরাপত্তা',
+    'hero_card_4'       => 'DDoS সুরক্ষা',
+    'hero_card_5'       => 'নিয়মিত ব্যাকআপ',
+
+    // domain search
+    'domain_h'          => 'আপনার পছন্দের ডোমেইন খুঁজুন',
+    'domain_sub'        => 'আপনার ব্র্যান্ডের জন্য সঠিক ডোমেইন নামটি খুঁজে নিন।',
+    'domain_placeholder'=> 'যেমন: yourdomain.com',
+    'domain_search_btn' => 'ডোমেইন খুঁজুন',
+    'domain_view_all'   => 'সকল ডোমেইন দেখুন',
+
+    // features
+    'why_eyebrow'       => 'কেন আমাদের বেছে নেবেন',
+    'why_h'             => 'বিশ্বাসযোগ্য অবকাঠামো। আপনার ব্যবসার জন্য।',
+    'learn_more'        => 'আরও জানুন',
+    'f1_title' => 'USA-ভিত্তিক ইনফ্রাস্ট্রাকচার', 'f1_desc' => 'যুক্তরাষ্ট্রের ডাটা সেন্টারের সেরা নেটওয়ার্ক কানেক্টিভিটি।',
+    'f2_title' => 'উচ্চ পারফরম্যান্স নেটওয়ার্ক', 'f2_desc' => 'দ্রুত গতি এবং নিরবচ্ছিন্ন পারফরম্যান্স নিশ্চিত।',
+    'f3_title' => 'এন্টারপ্রাইজ-গ্রেড নিরাপত্তা', 'f3_desc' => 'ফায়ারওয়াল, DDoS সুরক্ষা এবং ম্যালওয়্যার প্রতিরক্ষা।',
+    'f4_title' => 'নিয়মিত ব্যাকআপ ও ডাটা সুরক্ষা', 'f4_desc' => 'নিয়মিত ব্যাকআপ এবং ডাটা রিকভারি সুবিধা।',
+    'f5_title' => '২৪/৭ বিশেষজ্ঞ সাপোর্ট', 'f5_desc' => 'দক্ষ টেকনিক্যাল টিম সর্বদা প্রস্তুত।',
+
+    // services
+    'services_eyebrow'  => 'আপনার ব্যবসার জন্য সবকিছু',
+    'services_h_a'      => 'শক্তিশালী সমাধান।',
+    'services_h_b'      => 'এক বিশ্বস্ত অংশীদার।',
+    'services_sub'      => 'আজ আপনার প্রয়োজন অনুযায়ী শুরু করুন এবং ব্যবসা বাড়ার সাথে আরও সেবা যোগ করুন।',
+    'explore'           => 'বিস্তারিত দেখুন',
+    's1_title' => 'ডোমেইন', 's1_desc' => 'সহজেই আপনার ব্র্যান্ডের জন্য সঠিক ডোমেইন নিন।', 's1_cta' => 'ডোমেইন দেখুন',
+    's2_title' => 'ওয়েব হোস্টিং', 's2_desc' => 'দ্রুত, নিরাপদ ও নির্ভরযোগ্য হোস্টিং সেবা।', 's2_cta' => 'হোস্টিং প্ল্যান দেখুন',
+    's3_title' => 'বিজনেস ইমেইল', 's3_desc' => 'পেশাদার ইমেইল যা আপনার ব্র্যান্ডের বিশ্বাস বাড়ায়।', 's3_cta' => 'বিজনেস ইমেইল প্ল্যান দেখুন',
+    's4_title' => 'সার্ভার', 's4_desc' => 'পাওয়ারফুল VPS ও ডেডিকেটেড সার্ভার।', 's4_cta' => 'প্ল্যান দেখুন',
+    's5_title' => 'ওয়েবসাইট সার্ভিস', 's5_desc' => 'আধুনিক ও রেসপনসিভ ওয়েবসাইট তৈরি ও পরিচালনা।', 's5_cta' => 'সার্ভিস দেখুন',
+    's6_title' => 'সিকিউরিটি', 's6_desc' => 'ওয়েবসাইট ও ডেটার সুরক্ষা নিশ্চিত করুন।', 's6_cta' => 'সিকিউরিটি প্ল্যান দেখুন',
+    's7_title' => 'অ্যাপ্লিকেশন হোস্টিং', 's7_desc' => 'ওয়েব অ্যাপ, API এবং ডাটাবেস হোস্টিং।', 's7_cta' => 'প্ল্যান দেখুন',
+    's8_title' => 'ইন্ডাস্ট্রি সলিউশন', 's8_desc' => 'বিভিন্ন শিল্পের জন্য কাস্টম সমাধান।', 's8_cta' => 'সলিউশন দেখুন',
+    's9_title' => 'সাপোর্ট কেন্দ্র', 's9_desc' => '২৪/৭ সাপোর্ট, টিকেট এবং লাইভ চ্যাট।', 's9_cta' => 'সাপোর্ট নিন',
+    's10_title'=> 'SSL সার্টিফিকেট', 's10_desc'=> 'SSL সার্টিফিকেটের মাধ্যমে সাইট ও গ্রাহকের নিরাপত্তা নিশ্চিত করুন।', 's10_cta'=> 'SSL প্ল্যান দেখুন',
+
+    // stats
+    'stat_1_n' => '২০+', 'stat_1_l' => 'বছরের অভিজ্ঞতা<br>(২০০৪ সাল থেকে)',
+    'stat_2_n' => '১০,০০০+', 'stat_2_l' => 'সন্তুষ্ট গ্রাহক<br>সারা বিশ্বে',
+    'stat_3_n' => '৬০,০০০+', 'stat_3_l' => 'ওয়েবসাইট হোস্টেড<br>এবং বাড়ছে',
+    'stat_4_n' => '৯৯.৯%', 'stat_4_l' => 'আপটাইম<br>গ্যারান্টি',
+    'stat_5_n' => '২৪/৭/৩৬৫', 'stat_5_l' => 'বিশেষজ্ঞ সাপোর্ট<br>সবসময় আপনার পাশে',
+
+    // final cta
+    'cta_h'      => 'সঠিক সমাধান বেছে নিতে সাহায্য দরকার?',
+    'cta_sub'    => 'আমাদের বিশেষজ্ঞরা বিনামূল্যে পরামর্শ দেবেন। আপনার ব্যবসার জন্য সেরা ডোমেইন, হোস্টিং, সার্ভার বা ইমেইল সমাধান খুঁজে পেতে আমরা আছি আপনার সাথে।',
+    'cta_btn_1'  => 'ফ্রি পরামর্শ নিন',
+    'cta_btn_2'  => 'বিশেষজ্ঞের সাথে কথা বলুন',
+
+    // footer
+    'footer_tagline'   => 'নির্ভরযোগ্য হোস্টিং ও ডিজিটাল সমাধান, ব্যবসার সাফল্যের জন্য।',
+    'footer_services'  => 'সেবাসমূহ',
+    'footer_solutions' => 'সমাধানসমূহ',
+    'footer_company'   => 'কোম্পানি',
+    'footer_resources' => 'রিসোর্স',
+    'footer_accept'    => 'আমরা গ্রহণ করি',
+    'fs_1'=>'ডোমেইন','fs_2'=>'হোস্টিং','fs_3'=>'সার্ভার','fs_4'=>'ইমেইল সেবা','fs_5'=>'ওয়েবসাইট সেবা','fs_6'=>'সিকিউরিটি',
+    'fsol_1'=>'বিজনেস সলিউশন','fsol_2'=>'ডেভেলপার সলিউশন','fsol_3'=>'ই-কমার্স সলিউশন','fsol_4'=>'এজেন্সি সলিউশন','fsol_5'=>'ইন্ডাস্ট্রি সলিউশন',
+    'fc_1'=>'আমাদের সম্পর্কে','fc_2'=>'কেন WDH?','fc_3'=>'আমাদের ডাটা সেন্টার','fc_4'=>'ক্যারিয়ার','fc_5'=>'যোগাযোগ করুন',
+    'fr_1'=>'ব্লগ','fr_2'=>'নলেজ বেস','fr_3'=>'টিউটোরিয়াল','fr_4'=>'স্ট্যাটাস আপডেট','fr_5'=>'অ্যাফিলিয়েট',
+    'footer_copyright' => '© ২০০৪ – '.date('Y').' WDH। সর্বস্বত্ব সংরক্ষিত।',
+    'footer_support'   => '২৪/৭ মানব সহায়তা',
+];
